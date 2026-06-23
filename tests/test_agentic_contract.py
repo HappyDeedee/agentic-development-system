@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -258,10 +259,52 @@ class AgenticContractTests(unittest.TestCase):
         readme = (PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertNotIn("E:\\myproject", readme)
+        self.assertNotIn("E:\\path", readme)
         self.assertNotIn("C:\\Users\\Administrator", readme)
+        self.assertNotIn("$env:TEMP\\agentic-docs", readme)
         self.assertIn("<marketplace-root>", readme)
         self.assertIn("./plugins/agentic-development-system", readme)
         self.assertNotIn("./plugin/agentic-development-system", readme)
+
+    def test_public_docs_do_not_embed_private_machine_paths(self):
+        blocked_fragments = (
+            "E:\\myproject",
+            "E:\\path",
+            "C:\\Users\\Administrator",
+            "MediaCrawler",
+        )
+        windows_path_pattern = re.compile(r"\b[A-Za-z]:\\(?:Users|myproject|path|repos?|plugins?|workspace|tmp|temp)\\")
+        public_patterns = (
+            "*.md",
+            "*.json",
+            "*.py",
+        )
+        allowed_paths = {
+            Path("tests/test_agentic_contract.py"),
+        }
+        checked_files = []
+
+        for pattern in public_patterns:
+            for path in PLUGIN_ROOT.rglob(pattern):
+                relative_path = path.relative_to(PLUGIN_ROOT)
+                if ".git" in relative_path.parts or "__pycache__" in relative_path.parts:
+                    continue
+                if relative_path in allowed_paths:
+                    continue
+                checked_files.append(relative_path.as_posix())
+                content = path.read_text(encoding="utf-8")
+                for fragment in blocked_fragments:
+                    self.assertNotIn(
+                        fragment,
+                        content,
+                        f"{fragment!r} leaked into {relative_path.as_posix()}",
+                    )
+                self.assertIsNone(
+                    windows_path_pattern.search(content),
+                    f"Windows-specific path leaked into {relative_path.as_posix()}",
+                )
+
+        self.assertTrue(checked_files)
 
 
 if __name__ == "__main__":
