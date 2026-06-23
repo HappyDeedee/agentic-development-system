@@ -69,14 +69,39 @@ tests/
 fixture for plugin maintainers. It is not required at runtime and should not
 contain private workspace paths.
 
+## Requirements
+
+Runtime requirements:
+
+- Codex with local plugin marketplace support.
+- Python 3.10 or newer. The Python scripts use only the standard library.
+- Git, only if installing from a cloned repository.
+
+Optional external capabilities:
+
+- `plugin-eval` is only needed for development and evaluation.
+- Spec Kit CLI/skills are only needed when you want Spec Kit routes to run.
+- Superpowers, `plan-cross-validation`, and ADR skills are optional routes.
+  When missing, `capability-routing.json` reports install guidance and fallback
+  behavior.
+
 ## Local Installation
 
-Create or update a Codex marketplace file that points at this plugin.
+Clone the plugin into a local marketplace root, then create or update the
+marketplace file that points at the cloned plugin.
+
+Expected layout:
+
+```text
+<marketplace-root>/
+  .agents/plugins/marketplace.json
+  plugins/agentic-development-system/
+```
 
 Example marketplace root:
 
 ```text
-C:\path\to\your-marketplace\.agents\plugins\marketplace.json
+<marketplace-root>/.agents/plugins/marketplace.json
 ```
 
 Example entry:
@@ -92,7 +117,7 @@ Example entry:
       "name": "agentic-development-system",
       "source": {
         "source": "local",
-        "path": "./plugin/agentic-development-system"
+        "path": "./plugins/agentic-development-system"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -107,10 +132,14 @@ Example entry:
 Register and install:
 
 ```powershell
-codex plugin marketplace add C:\path\to\your-marketplace
+$marketplaceRoot = "<marketplace-root>"
+codex plugin marketplace add $marketplaceRoot
 codex plugin add agentic-development-system@local-agentic-plugins
 codex plugin list --marketplace local-agentic-plugins
 ```
+
+If you use a different folder layout, update `source.path` so it is relative to
+`<marketplace-root>`.
 
 Open a new Codex thread after reinstalling so updated skill metadata is loaded.
 
@@ -119,35 +148,38 @@ Open a new Codex thread after reinstalling so updated skill metadata is loaded.
 Audit a repository:
 
 ```powershell
-python scripts\audit_agentic_system.py E:\path\to\repo --json
+$repo = "<repo-root>"
+python scripts\audit_agentic_system.py $repo --json
 ```
 
 Export machine-readable docs in dry-run mode:
 
 ```powershell
-python scripts\export_machine_readable_docs.py E:\path\to\repo --output $env:TEMP\agentic-docs --dry-run --json
+$repo = "<repo-root>"
+$out = Join-Path $env:TEMP "agentic-docs"
+python scripts\export_machine_readable_docs.py $repo --output $out --dry-run --json
 ```
 
 Validate generated docs:
 
 ```powershell
-python scripts\validate_machine_readable_docs.py $env:TEMP\agentic-docs --json
+python scripts\validate_machine_readable_docs.py $out --json
 ```
 
 Export agent governance files:
 
 ```powershell
-python scripts\export_agentic_contract.py E:\path\to\repo --output $env:TEMP\agentic-docs\loop-contract.json
-python scripts\export_agent_policy.py E:\path\to\repo --output $env:TEMP\agentic-docs\agent-policy.json
-python scripts\export_capability_routing.py E:\path\to\repo --output $env:TEMP\agentic-docs\capability-routing.json
-python scripts\export_execution_readiness.py E:\path\to\repo --output $env:TEMP\agentic-docs\execution-readiness.json
-python scripts\export_agent_entry_patch.py E:\path\to\repo --output $env:TEMP\agentic-docs\proposed-agents-md.patch
+python scripts\export_agentic_contract.py $repo --output "$out\loop-contract.json"
+python scripts\export_agent_policy.py $repo --output "$out\agent-policy.json"
+python scripts\export_capability_routing.py $repo --output "$out\capability-routing.json"
+python scripts\export_execution_readiness.py $repo --output "$out\execution-readiness.json"
+python scripts\export_agent_entry_patch.py $repo --output "$out\proposed-agents-md.patch"
 ```
 
 Validate execution readiness:
 
 ```powershell
-python scripts\validate_agent_execution_readiness.py E:\path\to\repo --agentic-dir $env:TEMP\agentic-docs --json
+python scripts\validate_agent_execution_readiness.py $repo --agentic-dir $out --json
 ```
 
 ## Safety Model

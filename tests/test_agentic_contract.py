@@ -254,6 +254,15 @@ class AgenticContractTests(unittest.TestCase):
         self.assertFalse(Path(source_path).is_absolute())
         self.assertTrue((PLUGIN_ROOT / source_path).exists(), source_path)
 
+    def test_readme_uses_portable_installation_examples(self):
+        readme = (PLUGIN_ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertNotIn("E:\\myproject", readme)
+        self.assertNotIn("C:\\Users\\Administrator", readme)
+        self.assertIn("<marketplace-root>", readme)
+        self.assertIn("./plugins/agentic-development-system", readme)
+        self.assertNotIn("./plugin/agentic-development-system", readme)
+
 
 if __name__ == "__main__":
     unittest.main()
