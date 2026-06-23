@@ -1,6 +1,6 @@
 {
   "name": "agentic-development-system",
-  "version": "0.1.0+codex.20260623132815",
+  "version": "0.1.0+codex.20260623141744",
   "description": "Spec Kit-aware governance shim for auditing and initializing agentic development safely.",
   "author": {
     "name": "HappyDeedee"

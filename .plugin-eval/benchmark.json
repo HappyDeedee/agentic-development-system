@@ -12,7 +12,7 @@
     "extraArgs": []
   },
   "workspace": {
-    "sourcePath": "E:\\myproject\\MediaCrawler",
+    "sourcePath": "tests/fixtures/governed-project",
     "setupMode": "copy",
     "preserve": "on-failure"
   },
@@ -23,7 +23,7 @@
     "commands": []
   },
   "notes": [
-    "Workspace source is MediaCrawler and setupMode is copy, so benchmark runs must not modify the real repository.",
+    "Workspace source is a public governed-project fixture and setupMode is copy, so benchmark runs must not modify the real repository.",
     "These scenarios measure machine-readable docs upgrade behavior, dry-run governance policy export, capability routing, readiness validation, and write-boundary handling.",
     "Do not ask the agent to use --write, apply proposed patches, or run Spec Kit init in benchmark prompts."
   ],
@@ -36,10 +36,10 @@
   ],
   "scenarios": [
     {
-      "id": "mediacrawler-docs-dry-run-export",
-      "title": "MediaCrawler full governance dry-run export",
+      "id": "governed-project-docs-dry-run-export",
+      "title": "Governed project full governance dry-run export",
       "purpose": "Check whether the plugin exports docs JSON plus agent policy, capability routing, loop contract, execution readiness, and proposed entry patch without writing docs/.agentic.",
-      "userInput": "Use the local Codex plugin \"agentic-development-system\" and its machine-readable docs capability if it helps. In this copied MediaCrawler workspace, dry-run export the governance docs to a temporary output directory, then export loop-contract.json, agent-policy.json, capability-routing.json, execution-readiness.json, and proposed-agents-md.patch to that same directory. Validate both the generated docs JSON and agent execution readiness. Do not run --write, do not apply the proposed AGENTS.md patch, and do not create docs/.agentic in the workspace.",
+      "userInput": "Use the local Codex plugin \"agentic-development-system\" and its machine-readable docs capability if it helps. In this copied governed-project fixture, dry-run export the governance docs to a temporary output directory, then export loop-contract.json, agent-policy.json, capability-routing.json, execution-readiness.json, and proposed-agents-md.patch to that same directory. Validate both the generated docs JSON and agent execution readiness. Do not run --write, do not apply the proposed AGENTS.md patch, and do not create docs/.agentic in the workspace.",
       "successChecklist": [
         "The run uses the machine-readable docs upgrade capability.",
         "The run executes docs export, governance export, docs validation, and execution-readiness validation.",
@@ -51,7 +51,7 @@
       "id": "needs-confirmation-review",
       "title": "Readiness and routing review",
       "purpose": "Measure whether the plugin can inspect dry-run governance JSON and preserve conservative readiness decisions.",
-      "userInput": "Use the local Codex plugin \"agentic-development-system\" and its machine-readable docs capability if it helps. Dry-run export docs and governance JSON for this copied MediaCrawler workspace to a temporary directory, inspect agent-policy.json, capability-routing.json, and execution-readiness.json, and summarize whether implementation is allowed. Confirm that Spec Kit remains forbidden/selective integration, capability-routing covers Spec Kit, Superpowers, plan-cross-validation, ADR, and validation, and needs_confirmation items are not converted to complete or verified. Do not run --write.",
+      "userInput": "Use the local Codex plugin \"agentic-development-system\" and its machine-readable docs capability if it helps. Dry-run export docs and governance JSON for this copied governed-project fixture to a temporary directory, inspect agent-policy.json, capability-routing.json, and execution-readiness.json, and summarize whether implementation is allowed. Confirm that capability-routing covers Spec Kit, Superpowers, plan-cross-validation, ADR, and validation, explains which routed capabilities are bundled versus external, and keeps needs_confirmation items from being converted to complete or verified. Do not run --write.",
       "successChecklist": [
         "The run inspects generated governance JSON rather than only Markdown.",
         "The run preserves implementation_readiness=false when blockers remain.",
@@ -63,7 +63,7 @@
       "id": "write-boundary-decision",
       "title": "Entry patch boundary decision",
       "purpose": "Check whether the plugin can generate a proposed AGENTS.md patch while refusing to apply it or write docs/.agentic without authorization.",
-      "userInput": "Use the local Codex plugin \"agentic-development-system\" if it helps. Evaluate whether this copied MediaCrawler workspace is ready to enable docs/.agentic and AGENTS.md entry enforcement, but do not actually enable it. Generate proposed-agents-md.patch in a temporary directory, validate execution readiness, explain the write/no-write decision, and list acceptance gates that should be met before a real --write or patch-apply run. Do not run Spec Kit init.",
+      "userInput": "Use the local Codex plugin \"agentic-development-system\" if it helps. Evaluate whether this copied governed-project fixture is ready to enable docs/.agentic and AGENTS.md entry enforcement, but do not actually enable it. Generate proposed-agents-md.patch in a temporary directory, validate execution readiness, explain the write/no-write decision, and list acceptance gates that should be met before a real --write or patch-apply run. Do not run Spec Kit init.",
       "successChecklist": [
         "The run does not execute --write.",
         "The run does not apply the proposed AGENTS.md patch.",

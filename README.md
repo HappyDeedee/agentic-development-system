@@ -26,6 +26,33 @@ Observe -> Plan -> Act -> Verify -> Update State -> Decide Next Loop
 - Dry-run-first validation so the plugin can inspect and propose changes
   without modifying the target repository.
 
+## External Capability Routes
+
+This plugin is a governance and routing layer. It does not bundle every large
+agentic workflow it can route to. `capability-routing.json` marks each route
+with `bundled`, `source`, `dependency_status`, `install_hint`, and `fallback`.
+
+Bundled or built-in:
+
+- `validation`: project-local validation plus this plugin's audit/export/check
+  scripts.
+
+External routes to install or provide separately when needed:
+
+- `spec-kit`: install Spec Kit CLI/skills separately and verify `specify` is on
+  `PATH` before running Spec Kit stages.
+- `superpowers`: install the Superpowers plugin separately, for example
+  `codex plugin add superpowers@openai-api-curated` when that marketplace is
+  available.
+- `plan-cross-validation`: install the `plan-cross-validation` skill if you
+  want independent plan/TODO/roadmap review as a first-class route.
+- `architecture-decision-records`: install an ADR skill, or use the target
+  repository's existing decision-record process.
+
+If an external route is missing, the plugin should not pretend it ran. It
+should report the missing dependency, use the route's fallback, or ask the user
+to install the capability before continuing.
+
 ## Plugin Layout
 
 ```text
@@ -38,6 +65,10 @@ tests/
 .plugin-eval/benchmark.json
 ```
 
+`.plugin-eval/benchmark.json` is kept in the repository as a public evaluation
+fixture for plugin maintainers. It is not required at runtime and should not
+contain private workspace paths.
+
 ## Local Installation
 
 Create or update a Codex marketplace file that points at this plugin.
@@ -45,16 +76,16 @@ Create or update a Codex marketplace file that points at this plugin.
 Example marketplace root:
 
 ```text
-E:\myproject\.agents\plugins\marketplace.json
+C:\path\to\your-marketplace\.agents\plugins\marketplace.json
 ```
 
 Example entry:
 
 ```json
 {
-  "name": "myproject-local",
+  "name": "local-agentic-plugins",
   "interface": {
-    "displayName": "MyProject Local"
+    "displayName": "Local Agentic Plugins"
   },
   "plugins": [
     {
@@ -76,9 +107,9 @@ Example entry:
 Register and install:
 
 ```powershell
-codex plugin marketplace add E:\myproject
-codex plugin add agentic-development-system@myproject-local
-codex plugin list --marketplace myproject-local
+codex plugin marketplace add C:\path\to\your-marketplace
+codex plugin add agentic-development-system@local-agentic-plugins
+codex plugin list --marketplace local-agentic-plugins
 ```
 
 Open a new Codex thread after reinstalling so updated skill metadata is loaded.
@@ -156,7 +187,7 @@ When changing plugin behavior, update `.codex-plugin/plugin.json` with a new
 Codex cachebuster version and reinstall:
 
 ```powershell
-codex plugin add agentic-development-system@myproject-local
+codex plugin add agentic-development-system@local-agentic-plugins
 ```
 
 ## Current Status

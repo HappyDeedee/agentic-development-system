@@ -27,6 +27,60 @@ REQUIRED_CAPABILITIES = (
     "validation",
 )
 
+EXTERNAL_CAPABILITY_HINTS = {
+    "spec-kit": {
+        "bundled": False,
+        "source": "external_cli_and_skills",
+        "install_hint": (
+            "Install Spec Kit CLI/skills separately and verify `specify` is on "
+            "PATH before using Spec Kit routes."
+        ),
+        "fallback": "Use selective integration advice and do not run Spec Kit commands until installed.",
+        "required": False,
+    },
+    "superpowers": {
+        "bundled": False,
+        "source": "external_plugin",
+        "install_hint": (
+            "Install the Superpowers plugin separately, for example "
+            "`codex plugin add superpowers@openai-api-curated` when that "
+            "marketplace is available."
+        ),
+        "fallback": (
+            "Use the repository tests and this plugin's readiness gates without "
+            "claiming Superpowers coverage."
+        ),
+        "required": False,
+    },
+    "plan-cross-validation": {
+        "bundled": False,
+        "source": "external_skill",
+        "install_hint": "Install the plan-cross-validation skill separately before using this route.",
+        "fallback": (
+            "Generate a read-only review brief for the user or another reviewer "
+            "instead of claiming the route ran."
+        ),
+        "required": False,
+    },
+    "architecture-decision-records": {
+        "bundled": False,
+        "source": "external_skill",
+        "install_hint": (
+            "Install an architecture-decision-records skill separately, or use "
+            "the target project's ADR process."
+        ),
+        "fallback": "Record proposed decisions in the target project's existing decision log if one exists.",
+        "required": False,
+    },
+    "validation": {
+        "bundled": True,
+        "source": "project_and_plugin_validation",
+        "install_hint": "Use project-local tests plus this plugin's validation scripts.",
+        "fallback": "Stop and ask for a validation command when no project-local check is discoverable.",
+        "required": True,
+    },
+}
+
 AGENT_ENTRY_RULE_TITLE = "Agentic Machine-Readable Governance Rule"
 
 
@@ -91,56 +145,114 @@ def build_agent_policy(root: Path, audit: dict[str, Any], contract: dict[str, An
     }
 
 
-def route_policy_for_capability(name: str, audit: dict[str, Any]) -> dict[str, Any]:
-    if name == "spec-kit":
-        policy = audit.get("spec_kit_policy")
-        return {
-            "capability": name,
-            "status": "available" if audit.get("spec_kit_cli", {}).get("available") else "unavailable",
-            "route": "selective_integration" if policy == "forbidden" else audit.get("spec_kit_next_skill"),
-            "policy": policy,
-            "allowed_actions": ["responsibility_mapping", "route_to_next_skill"],
-            "forbidden_actions": ["specify init", "run_spec_kit_init.py"],
-            "requires_user_confirmation": policy in {"gated", "allowed"},
-            "evidence": list(audit.get("spec_kit_policy_reasons") or []),
-        }
-    if name == "superpowers":
-        return {
-            "capability": name,
-            "status": "available",
-            "route": "implementation_discipline",
-            "allowed_actions": ["test-driven-development", "systematic-debugging", "verification-before-completion"],
-            "activation_gate": "implementation_readiness must be true and blocking_decisions must be empty",
-            "forbidden_actions": ["override source-of-truth docs", "skip validation evidence"],
-        }
-    if name == "plan-cross-validation":
-        return {
-            "capability": name,
-            "status": "available",
-            "route": "independent_read_only_review",
-            "triggers": [
-                "high-risk plan",
-                "roadmap or phase restructuring",
-                "TODO baseline gaps",
-                "permissions/security/deployment/data migration",
-                "unclear acceptance criteria",
-            ],
-            "forbidden_actions": ["mutate project during review"],
-        }
-    if name == "architecture-decision-records":
-        return {
-            "capability": name,
-            "status": "available",
-            "route": "durable_decision_record",
-            "triggers": [
-                "architecture shape changes",
-                "framework or persistence choices",
-                "deployment/security/API contract decisions",
-                "irreversible simplification or migration",
-            ],
-        }
+def capability_local_details(name: str, audit: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
+    availability = audit.get("capability_availability") or {}
+    local_details = availability.get(name, {}) if isinstance(availability, dict) else {}
+    local_status = local_details.get("status") if isinstance(local_details, dict) else None
+    return local_details if isinstance(local_details, dict) else {}, local_status
+
+
+def dependency_status(bundled: bool, local_status: str | None) -> str:
+    if bundled:
+        return "bundled"
+    if local_status == "available":
+        return "available"
+    if local_status == "installed_but_unverified":
+        return "external_unverified"
+    if local_status == "missing":
+        return "external_missing"
+    return "external_unverified"
+
+
+def route_base_fields(name: str, audit: dict[str, Any]) -> dict[str, Any]:
+    local_details, local_status = capability_local_details(name, audit)
+    hint = EXTERNAL_CAPABILITY_HINTS.get(name, {})
+    bundled = bool(hint.get("bundled"))
+    status = dependency_status(bundled, local_status)
+    local_evidence = list(local_details.get("evidence") or [])
     return {
-        "capability": name,
+        **hint,
+        "local_status": local_status or "not_checked",
+        "local_evidence": local_evidence,
+        "dependency_status": status,
+        "requires_install": not bundled and status != "available",
+    }
+
+
+def build_spec_kit_route(audit: dict[str, Any]) -> dict[str, Any]:
+    base = route_base_fields("spec-kit", audit)
+    policy = audit.get("spec_kit_policy")
+    return {
+        **base,
+        "capability": "spec-kit",
+        "status": "available" if audit.get("spec_kit_cli", {}).get("available") else "unavailable",
+        "route": "selective_integration" if policy == "forbidden" else audit.get("spec_kit_next_skill"),
+        "policy": policy,
+        "allowed_actions": ["responsibility_mapping", "route_to_next_skill"],
+        "forbidden_actions": ["specify init", "run_spec_kit_init.py"],
+        "requires_user_confirmation": policy in {"gated", "allowed"},
+        "evidence": list(audit.get("spec_kit_policy_reasons") or []),
+    }
+
+
+def build_superpowers_route(audit: dict[str, Any]) -> dict[str, Any]:
+    base = route_base_fields("superpowers", audit)
+    return {
+        **base,
+        "capability": "superpowers",
+        "status": base["local_status"] if base["local_status"] != "not_checked" else "external_optional",
+        "route": "implementation_discipline",
+        "allowed_actions": [
+            "test-driven-development",
+            "systematic-debugging",
+            "verification-before-completion",
+        ],
+        "activation_gate": "implementation_readiness must be true and blocking_decisions must be empty",
+        "forbidden_actions": ["override source-of-truth docs", "skip validation evidence"],
+    }
+
+
+def build_plan_cross_validation_route(audit: dict[str, Any]) -> dict[str, Any]:
+    base = route_base_fields("plan-cross-validation", audit)
+    base = {
+        **base,
+        "capability": "plan-cross-validation",
+        "status": base["local_status"] if base["local_status"] != "not_checked" else "external_optional",
+        "route": "independent_read_only_review",
+    }
+    return {
+        **base,
+        "triggers": [
+            "high-risk plan",
+            "roadmap or phase restructuring",
+            "TODO baseline gaps",
+            "permissions/security/deployment/data migration",
+            "unclear acceptance criteria",
+        ],
+        "forbidden_actions": ["mutate project during review"],
+    }
+
+
+def build_adr_route(audit: dict[str, Any]) -> dict[str, Any]:
+    base = route_base_fields("architecture-decision-records", audit)
+    return {
+        **base,
+        "capability": "architecture-decision-records",
+        "status": base["local_status"] if base["local_status"] != "not_checked" else "external_optional",
+        "route": "durable_decision_record",
+        "triggers": [
+            "architecture shape changes",
+            "framework or persistence choices",
+            "deployment/security/API contract decisions",
+            "irreversible simplification or migration",
+        ],
+    }
+
+
+def build_validation_route(audit: dict[str, Any]) -> dict[str, Any]:
+    return {
+        **route_base_fields("validation", audit),
+        "capability": "validation",
         "status": "available",
         "route": "project_validation",
         "triggers": ["before completion", "after docs or code changes", "before state update"],
@@ -148,8 +260,35 @@ def route_policy_for_capability(name: str, audit: dict[str, Any]) -> dict[str, A
     }
 
 
+ROUTE_BUILDERS = {
+    "spec-kit": build_spec_kit_route,
+    "superpowers": build_superpowers_route,
+    "plan-cross-validation": build_plan_cross_validation_route,
+    "architecture-decision-records": build_adr_route,
+    "validation": build_validation_route,
+}
+
+
+def route_policy_for_capability(name: str, audit: dict[str, Any]) -> dict[str, Any]:
+    builder = ROUTE_BUILDERS.get(name, build_validation_route)
+    return builder(audit)
+
+
 def build_capability_routing(root: Path, audit: dict[str, Any]) -> dict[str, Any]:
     routes = [route_policy_for_capability(name, audit) for name in REQUIRED_CAPABILITIES]
+    external_recommendations = [
+        {
+            "capability": route["capability"],
+            "required": route.get("required", False),
+            "dependency_status": route.get("dependency_status"),
+            "source": route.get("source"),
+            "install_hint": route.get("install_hint"),
+            "fallback": route.get("fallback"),
+            "local_status": route.get("local_status"),
+        }
+        for route in routes
+        if not route.get("bundled", False)
+    ]
     return {
         "schema_version": "capability-routing/v1",
         "generated_at": utc_now(),
@@ -158,6 +297,7 @@ def build_capability_routing(root: Path, audit: dict[str, Any]) -> dict[str, Any
         "capability_fit_status": audit.get("capability_fit_status"),
         "required_capabilities": list(REQUIRED_CAPABILITIES),
         "routes": routes,
+        "external_dependency_recommendations": external_recommendations,
         "missing_or_unverified_capabilities": list(audit.get("missing_or_unverified_capabilities") or []),
         "slot_recommendations": list(audit.get("capability_slot_recommendations") or []),
     }

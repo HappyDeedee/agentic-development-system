@@ -3,7 +3,7 @@
   "$id": "capability.routing.schema.json",
   "title": "Capability Routing",
   "type": "object",
-  "required": ["schema_version", "required_capabilities", "routes"],
+  "required": ["schema_version", "required_capabilities", "routes", "external_dependency_recommendations"],
   "properties": {
     "schema_version": { "const": "capability-routing/v1" },
     "generated_at": { "type": "string" },
@@ -19,7 +19,36 @@
         "properties": {
           "capability": { "type": "string" },
           "route": { "type": ["string", "null"] },
-          "status": { "type": ["string", "null"] }
+          "status": { "type": ["string", "null"] },
+          "bundled": { "type": "boolean" },
+          "source": { "type": "string" },
+          "install_hint": { "type": "string" },
+          "fallback": { "type": "string" },
+          "dependency_status": {
+            "enum": ["bundled", "available", "external_missing", "external_unverified"]
+          },
+          "requires_install": { "type": "boolean" },
+          "local_status": { "type": "string" },
+          "local_evidence": { "type": "array", "items": { "type": "string" } }
+        },
+        "additionalProperties": true
+      }
+    },
+    "external_dependency_recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["capability", "source", "install_hint", "fallback"],
+        "properties": {
+          "capability": { "type": "string" },
+          "required": { "type": "boolean" },
+          "dependency_status": {
+            "enum": ["available", "external_missing", "external_unverified"]
+          },
+          "source": { "type": "string" },
+          "install_hint": { "type": "string" },
+          "fallback": { "type": "string" },
+          "local_status": { "type": "string" }
         },
         "additionalProperties": true
       }

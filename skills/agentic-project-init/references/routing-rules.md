@@ -50,6 +50,21 @@ covered. A workflow file that exists but does not explain when to use
 Superpowers, `$plan-cross-validation`, `$speckit-*`, ADRs, and safe
 code-understanding is only partial routing.
 
+Also check whether a routed capability is bundled with this plugin or external.
+This plugin provides the governance/audit/export layer, but it does not bundle
+large external workflows. `capability-routing.json` must expose `bundled`,
+`source`, `dependency_status`, `install_hint`, and `fallback` for each route.
+If an external route is missing, report the installation hint or use the
+fallback instead of claiming the external capability ran.
+
+| Capability | Bundled here | Route source | Install guidance |
+| --- | --- | --- | --- |
+| Spec Kit | No | external CLI/skills | Install Spec Kit separately and verify `specify` is on `PATH` |
+| Superpowers | No | external plugin | Install `superpowers`, for example `codex plugin add superpowers@openai-api-curated` when available |
+| plan-cross-validation | No | external skill | Install the skill before using it as an independent review route |
+| architecture-decision-records | No | external skill/process | Install an ADR skill or use the target project's existing decision log |
+| validation | Yes | project tests plus plugin scripts | Use project-local checks and this plugin's validation scripts |
+
 Before any routing decision that creates or reviews future work, apply the
 Current Baseline Gate in `baseline-gate.md`.
 

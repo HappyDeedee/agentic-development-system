@@ -27,6 +27,62 @@ def run_script(script_name, *args):
     return completed.stdout
 
 
+def create_governed_repo(repo: Path) -> str:
+    docs = repo / "docs"
+    docs.mkdir()
+    original_agents = "# Agent Guide\n\nRead docs before implementation.\n"
+    (repo / "AGENTS.md").write_text(original_agents, encoding="utf-8")
+    (docs / "GOAL.md").write_text("# Test Goal\n", encoding="utf-8")
+    (docs / "CURRENT_STATE.md").write_text("# State\nNeeds Confirmation\n", encoding="utf-8")
+    (docs / "TASKS.md").write_text("- [ ] Needs confirmation task\n", encoding="utf-8")
+    (docs / "CHANGE_REQUESTS.md").write_text(
+        "| ID | Status |\n| --- | --- |\n| CR-1 | Needs Confirmation |\n",
+        encoding="utf-8",
+    )
+    (docs / "DECISIONS.md").write_text("# Decisions\n", encoding="utf-8")
+    (docs / "TRACEABILITY.md").write_text("| Req | Task |\n| --- | --- |\n| R1 | T1 |\n", encoding="utf-8")
+    (docs / "TEST_PLAN.md").write_text("# Test Plan\n", encoding="utf-8")
+    (docs / "TEST_RESULTS.md").write_text(
+        "| Date | Result |\n| --- | --- |\n| today | TBD |\n",
+        encoding="utf-8",
+    )
+    return original_agents
+
+
+def export_governance_bundle(repo: Path, output_path: Path) -> None:
+    run_script("export_agentic_contract.py", str(repo), "--output", str(output_path / "loop-contract.json"))
+    run_script("export_agent_policy.py", str(repo), "--output", str(output_path / "agent-policy.json"))
+    run_script(
+        "export_capability_routing.py",
+        str(repo),
+        "--output",
+        str(output_path / "capability-routing.json"),
+    )
+    run_script(
+        "export_execution_readiness.py",
+        str(repo),
+        "--agentic-dir",
+        str(output_path),
+        "--output",
+        str(output_path / "execution-readiness.json"),
+    )
+    run_script(
+        "export_agent_entry_patch.py",
+        str(repo),
+        "--output",
+        str(output_path / "proposed-agents-md.patch"),
+    )
+
+
+def load_governance_bundle(output_path: Path) -> dict[str, object]:
+    return {
+        "policy": json.loads((output_path / "agent-policy.json").read_text(encoding="utf-8")),
+        "routing": json.loads((output_path / "capability-routing.json").read_text(encoding="utf-8")),
+        "readiness": json.loads((output_path / "execution-readiness.json").read_text(encoding="utf-8")),
+        "patch": (output_path / "proposed-agents-md.patch").read_text(encoding="utf-8"),
+    }
+
+
 class AgenticContractTests(unittest.TestCase):
     def test_audit_emits_legacy_and_contract_fields(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -129,48 +185,9 @@ class AgenticContractTests(unittest.TestCase):
     def test_agent_governance_exports_and_validates_without_applying_patch(self):
         with tempfile.TemporaryDirectory() as temp_dir, tempfile.TemporaryDirectory() as output_dir:
             repo = Path(temp_dir)
-            docs = repo / "docs"
-            docs.mkdir()
-            original_agents = "# Agent Guide\n\nRead docs before implementation.\n"
-            (repo / "AGENTS.md").write_text(original_agents, encoding="utf-8")
-            (docs / "GOAL.md").write_text("# Test Goal\n", encoding="utf-8")
-            (docs / "CURRENT_STATE.md").write_text("# State\nNeeds Confirmation\n", encoding="utf-8")
-            (docs / "TASKS.md").write_text("- [ ] Needs confirmation task\n", encoding="utf-8")
-            (docs / "CHANGE_REQUESTS.md").write_text(
-                "| ID | Status |\n| --- | --- |\n| CR-1 | Needs Confirmation |\n",
-                encoding="utf-8",
-            )
-            (docs / "DECISIONS.md").write_text("# Decisions\n", encoding="utf-8")
-            (docs / "TRACEABILITY.md").write_text("| Req | Task |\n| --- | --- |\n| R1 | T1 |\n", encoding="utf-8")
-            (docs / "TEST_PLAN.md").write_text("# Test Plan\n", encoding="utf-8")
-            (docs / "TEST_RESULTS.md").write_text(
-                "| Date | Result |\n| --- | --- |\n| today | TBD |\n",
-                encoding="utf-8",
-            )
-
+            original_agents = create_governed_repo(repo)
             output_path = Path(output_dir)
-            run_script("export_agentic_contract.py", str(repo), "--output", str(output_path / "loop-contract.json"))
-            run_script("export_agent_policy.py", str(repo), "--output", str(output_path / "agent-policy.json"))
-            run_script(
-                "export_capability_routing.py",
-                str(repo),
-                "--output",
-                str(output_path / "capability-routing.json"),
-            )
-            run_script(
-                "export_execution_readiness.py",
-                str(repo),
-                "--agentic-dir",
-                str(output_path),
-                "--output",
-                str(output_path / "execution-readiness.json"),
-            )
-            run_script(
-                "export_agent_entry_patch.py",
-                str(repo),
-                "--output",
-                str(output_path / "proposed-agents-md.patch"),
-            )
+            export_governance_bundle(repo, output_path)
             validation = json.loads(
                 run_script(
                     "validate_agent_execution_readiness.py",
@@ -181,14 +198,21 @@ class AgenticContractTests(unittest.TestCase):
                 )
             )
 
-            policy = json.loads((output_path / "agent-policy.json").read_text(encoding="utf-8"))
-            routing = json.loads((output_path / "capability-routing.json").read_text(encoding="utf-8"))
-            readiness = json.loads((output_path / "execution-readiness.json").read_text(encoding="utf-8"))
-            patch = (output_path / "proposed-agents-md.patch").read_text(encoding="utf-8")
+            bundle = load_governance_bundle(output_path)
             agents_text_after = (repo / "AGENTS.md").read_text(encoding="utf-8")
             docs_agentic_exists = (repo / "docs" / ".agentic").exists()
 
         self.assertTrue(validation["valid"], validation)
+        self.assert_governance_bundle(bundle)
+        self.assertEqual(agents_text_after, original_agents)
+        self.assertFalse(docs_agentic_exists)
+
+    def assert_governance_bundle(self, bundle):
+        policy = bundle["policy"]
+        routing = bundle["routing"]
+        readiness = bundle["readiness"]
+        patch = bundle["patch"]
+
         self.assertEqual(policy["schema_version"], "agent-policy/v1")
         self.assertIn("docs/.agentic/agent-policy.json", policy["required_read_order"])
         self.assertEqual(policy["loop_order"], ["observe", "plan", "act", "verify", "update_state", "decide_next_loop"])
@@ -201,10 +225,34 @@ class AgenticContractTests(unittest.TestCase):
             "validation",
         }
         self.assertTrue(expected_routes.issubset(route_names))
+        routes_by_name = {item["capability"]: item for item in routing["routes"]}
+        plan_route = routes_by_name["plan-cross-validation"]
+        validation_route = routes_by_name["validation"]
+        self.assertFalse(plan_route["bundled"])
+        self.assertEqual(plan_route["source"], "external_skill")
+        self.assertIn("install_hint", plan_route)
+        self.assertIn("dependency_status", plan_route)
+        self.assertTrue(validation_route["bundled"])
+        recommendations = {
+            item["capability"]: item
+            for item in routing["external_dependency_recommendations"]
+        }
+        self.assertIn("plan-cross-validation", recommendations)
+        self.assertIn("install_hint", recommendations["plan-cross-validation"])
+        self.assertIn("fallback", recommendations["plan-cross-validation"])
         self.assertFalse(readiness["implementation_readiness"])
         self.assertIn("Agentic Machine-Readable Governance Rule", patch)
-        self.assertEqual(agents_text_after, original_agents)
-        self.assertFalse(docs_agentic_exists)
+
+    def test_benchmark_uses_public_fixture_not_private_project_path(self):
+        config_path = PLUGIN_ROOT / ".plugin-eval" / "benchmark.json"
+        config_text = config_path.read_text(encoding="utf-8")
+        config = json.loads(config_text)
+        source_path = config["workspace"]["sourcePath"]
+
+        self.assertNotIn("MediaCrawler", config_text)
+        self.assertNotIn("E:\\", source_path)
+        self.assertFalse(Path(source_path).is_absolute())
+        self.assertTrue((PLUGIN_ROOT / source_path).exists(), source_path)
 
 
 if __name__ == "__main__":
