@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent.entry.schema.json",
+  "title": "Agent Entry Patch",
+  "type": "object",
+  "required": ["schema_version", "target_file", "patch_file", "rule_title"],
+  "properties": {
+    "schema_version": { "const": "agent-entry/v1" },
+    "target_file": { "type": "string" },
+    "patch_file": { "type": "string" },
+    "rule_title": { "type": "string" },
+    "applied": { "type": "boolean" }
+  },
+  "additionalProperties": true
+}

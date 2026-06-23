@@ -1,0 +1,6 @@
+interface:
+  display_name: "Agentic Project Init"
+  short_description: "Initialize repos with baseline-aware routing"
+  default_prompt: "Audit this repo with $agentic-project-init before implementation; report blockers, Spec Kit policy, and next route."
+policy:
+  allow_implicit_invocation: true

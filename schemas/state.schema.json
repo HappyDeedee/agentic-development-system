@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic-development-system/schemas/state.schema.json",
+  "title": "Agentic State Snapshot",
+  "type": "object",
+  "required": ["project_layer", "implementation_readiness", "blocking_decisions"],
+  "properties": {
+    "project_layer": {
+      "type": "string"
+    },
+    "implementation_readiness": {
+      "type": "boolean"
+    },
+    "blocking_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "todo_baseline_readiness": {
+      "type": "string"
+    },
+    "spec_kit_policy": {
+      "type": "string"
+    },
+    "capability_fit_status": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

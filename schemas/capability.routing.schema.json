@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "capability.routing.schema.json",
+  "title": "Capability Routing",
+  "type": "object",
+  "required": ["schema_version", "required_capabilities", "routes"],
+  "properties": {
+    "schema_version": { "const": "capability-routing/v1" },
+    "generated_at": { "type": "string" },
+    "repo_root": { "type": "string" },
+    "routing_status": { "type": ["string", "null"] },
+    "capability_fit_status": { "type": ["string", "null"] },
+    "required_capabilities": { "type": "array", "items": { "type": "string" } },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["capability", "route"],
+        "properties": {
+          "capability": { "type": "string" },
+          "route": { "type": ["string", "null"] },
+          "status": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

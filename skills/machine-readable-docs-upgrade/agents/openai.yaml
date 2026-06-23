@@ -1,0 +1,6 @@
+interface:
+  display_name: "Machine Readable Docs Upgrade"
+  short_description: "Export governance Markdown into JSON"
+  default_prompt: "Use $machine-readable-docs-upgrade to dry-run export this repo's governance docs into docs/.agentic-style JSON and validate consistency."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic-development-system/schemas/docs.bundle.schema.json",
+  "title": "Machine-readable Docs Bundle",
+  "type": "object",
+  "required": ["schema_version", "repo_root", "generated_at", "outputs", "source_policy", "needs_confirmation"],
+  "properties": {
+    "schema_version": {
+      "const": "docs-bundle/v1"
+    },
+    "repo_root": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "outputs": {
+      "type": "object"
+    },
+    "source_policy": {
+      "type": "object"
+    },
+    "needs_confirmation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

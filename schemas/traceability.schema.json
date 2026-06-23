@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic-development-system/schemas/traceability.schema.json",
+  "title": "Agentic Traceability Contract",
+  "type": "object",
+  "required": ["role_hits", "missing_roles", "validation_evidence"],
+  "properties": {
+    "role_hits": {
+      "type": "object"
+    },
+    "missing_roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "validation_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "baseline_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

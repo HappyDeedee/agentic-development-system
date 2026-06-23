@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic-development-system/schemas/task.registry.schema.json",
+  "title": "Machine-readable Task Registry",
+  "type": "object",
+  "required": ["schema_version", "repo_root", "source_documents", "tasks", "needs_confirmation"],
+  "properties": {
+    "schema_version": {
+      "const": "task-registry/v1"
+    },
+    "repo_root": {
+      "type": "string"
+    },
+    "source_documents": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "change_requests": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "needs_confirmation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

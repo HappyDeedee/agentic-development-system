@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent.policy.schema.json",
+  "title": "Agent Policy",
+  "type": "object",
+  "required": ["schema_version", "machine_readable_entrypoint", "required_read_order", "loop_order", "execution_boundaries"],
+  "properties": {
+    "schema_version": { "const": "agent-policy/v1" },
+    "generated_at": { "type": "string" },
+    "repo_root": { "type": "string" },
+    "machine_readable_entrypoint": { "type": "string" },
+    "required_read_order": { "type": "array", "items": { "type": "string" } },
+    "loop_order": { "type": "array", "items": { "type": "string" } },
+    "execution_boundaries": { "type": "object" },
+    "current_state": { "type": "object" },
+    "validation_commands": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

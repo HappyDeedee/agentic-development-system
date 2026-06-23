@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic-development-system/schemas/traceability.matrix.schema.json",
+  "title": "Machine-readable Traceability Matrix",
+  "type": "object",
+  "required": ["schema_version", "repo_root", "source_documents", "traceability_items", "needs_confirmation"],
+  "properties": {
+    "schema_version": {
+      "const": "traceability-matrix/v1"
+    },
+    "repo_root": {
+      "type": "string"
+    },
+    "source_documents": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "traceability_items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "needs_confirmation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,26 @@
+{
+  "name": "agentic-development-system",
+  "version": "0.1.0+codex.20260621103312",
+  "description": "Spec Kit-aware governance shim for auditing and initializing agentic development safely.",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Agentic Development System",
+    "shortDescription": "Audit repos and gate Spec Kit initialization.",
+    "longDescription": "Install a reusable Codex workflow for project-layer audit, Spec Kit readiness detection, mature-project protection, baseline-aware TODO auditing, sensitive and multi-repo boundaries, and routing rules for Spec Kit, ADR, Superpowers, plan-cross-validation, ast-grep, and optional capability slots.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "file:///C:/Users/Administrator/plugins/agentic-development-system/skills/agentic-project-init/SKILL.md",
+    "privacyPolicyURL": "file:///C:/Users/Administrator/plugins/agentic-development-system/assets/privacy-policy.md",
+    "termsOfServiceURL": "file:///C:/Users/Administrator/plugins/agentic-development-system/assets/terms-of-service.md",
+    "defaultPrompt": [
+      "Use $agentic-project-init to audit this repo before implementation and report blockers, Spec Kit policy, and next route."
+    ]
+  }
+}

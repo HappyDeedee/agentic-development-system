@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "execution.readiness.schema.json",
+  "title": "Execution Readiness",
+  "type": "object",
+  "required": ["schema_version", "implementation_readiness", "blocking_decisions", "spec_kit_policy", "required_files"],
+  "properties": {
+    "schema_version": { "const": "execution-readiness/v1" },
+    "generated_at": { "type": "string" },
+    "repo_root": { "type": "string" },
+    "agentic_dir": { "type": "string" },
+    "implementation_readiness": { "type": "boolean" },
+    "raw_implementation_readiness": { "type": ["boolean", "null"] },
+    "next_decision": { "type": "string" },
+    "blocking_decisions": { "type": "array", "items": { "type": "string" } },
+    "spec_kit_policy": { "type": ["string", "null"] },
+    "spec_kit_mode": { "type": "string" },
+    "required_files": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": true
+}

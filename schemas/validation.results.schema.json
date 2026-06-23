@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agentic-development-system/schemas/validation.results.schema.json",
+  "title": "Machine-readable Validation Results",
+  "type": "object",
+  "required": ["schema_version", "repo_root", "source_documents", "validation_items", "needs_confirmation"],
+  "properties": {
+    "schema_version": {
+      "const": "validation-results/v1"
+    },
+    "repo_root": {
+      "type": "string"
+    },
+    "source_documents": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "validation_items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "needs_confirmation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}
